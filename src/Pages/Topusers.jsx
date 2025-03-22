@@ -4,26 +4,35 @@ import { useEffect,useState } from "react";
 import React from "react";
 const UserTable = () => {
     let users = userData.users;
-//   const [users, setUsers] = useState([]);
-//   useEffect(() => {
-//     let getUsers = async () => {
-//     fetch('http://20.244.56.144/test/users',{headers: {"Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJNYXBDbGFpbXMiOnsiZXhwIjoxNzQyNjIyMzk4LCJpYXQiOjE3NDI2MjIwOTgsImlzcyI6IkFmZm9yZG1lZCIsImp0aSI6IjgxMDZkYTU3LTUxOTgtNDgxZi04YmY2LTg5N2Y5MjJlYzFkMCIsInN1YiI6ImZvZ2UxMDAzQGdtYWlsLmNvbSJ9LCJjb21wYW55TmFtZSI6IkJNTCBNdW5qYWwgVW5pdmVyc2l0eSIsImNsaWVudElEIjoiODEwNmRhNTctNTE5OC00ODFmLThiZjYtODk3ZjkyMmVjMWQwIiwiY2xpZW50U2VjcmV0IjoiV0dzVExjY0J6ZGxLdk9ZbyIsIm93bmVyTmFtZSI6IkF5dXNoIiwib3duZXJFbWFpbCI6ImZvZ2UxMDAzQGdtYWlsLmNvbSIsInJvbGxObyI6IjIyMDQ4NiJ9.0lBEuOt_jCgrlPliOhXfnOYgjgUVaMVMPPrluIei3-E",
-// }})
-//       .then(response => response.json())
-//       .then(data => {
-//         console.log(data)   
-//         let temp = Object.keys(data.users).map((key) => [key, data.users[key]]);
-//         console.log(temp)
-//         setUsers(temp);
-//       });
-//     }
-//     getUsers();
-//   }, []);
+    const universityInfo = {
+        companyName: "BML Munjal University",
+        clientID: "8106da57-5198-481f-8bf6-897f922ec1d0",
+        clientSecret: "WGsTLccBzdlKvOYo",
+        ownerName: "Ayush",
+        ownerEmail: "foge1003@gmail.com",
+        rollNo: "220486"
+      };
+    const [bearerToken, setBearerToken] = useState("");
+    useEffect(() => {
+        let getToken = async () => {
+        fetch('http://20.244.56.144/test/auth',{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(universityInfo)})
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(data)
+            setBearerToken(data.access_token);
+            return data
+        })
+    }
+    let token = getToken();
+},[]);
+console.log(bearerToken);
+
     const [userPosts, setUserPosts] = useState([]);
   useEffect(() => {
+    if(bearerToken==="") return;
     let getUsers = async (id) => {
         if(id===undefined) return;
-    await fetch('http://20.244.56.144/test/users/'+id+"/posts",{headers: {"Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJNYXBDbGFpbXMiOnsiZXhwIjoxNzQyNjI0Mjc5LCJpYXQiOjE3NDI2MjM5NzksImlzcyI6IkFmZm9yZG1lZCIsImp0aSI6IjgxMDZkYTU3LTUxOTgtNDgxZi04YmY2LTg5N2Y5MjJlYzFkMCIsInN1YiI6ImZvZ2UxMDAzQGdtYWlsLmNvbSJ9LCJjb21wYW55TmFtZSI6IkJNTCBNdW5qYWwgVW5pdmVyc2l0eSIsImNsaWVudElEIjoiODEwNmRhNTctNTE5OC00ODFmLThiZjYtODk3ZjkyMmVjMWQwIiwiY2xpZW50U2VjcmV0IjoiV0dzVExjY0J6ZGxLdk9ZbyIsIm93bmVyTmFtZSI6IkF5dXNoIiwib3duZXJFbWFpbCI6ImZvZ2UxMDAzQGdtYWlsLmNvbSIsInJvbGxObyI6IjIyMDQ4NiJ9.bb5oWZd8yI-2Rip30nFBzJKVDGGy7yqyV1UCgx6J8AI",
+    await fetch('http://20.244.56.144/test/users/'+id+"/posts",{headers: {"Authorization":`Bearer ${bearerToken}`,
 }})
       .then(response => response.json())
       .then(data => {
@@ -31,17 +40,19 @@ const UserTable = () => {
         setUserPosts(userPosts=>[...userPosts,{id:id,posts:data.posts}]);
       });
     }
-    let tempUsers = Object.keys(users).map((key) => [key,users[key]]).map(([id, name]) => ({id:id,name:name}));
-    tempUsers.forEach((el,i)=>{
-        if(el.id!==undefined){
-            getUsers(el.id);
-        }
-    })
-    setUserPosts(userPosts.filter((el)=>el.id!==undefined))
+    if(users){
+        let tempUsers = Object.keys(users).map((key) => [key,users[key]]).map(([id, name]) => ({id:id,name:name}));
+        tempUsers.forEach((el,i)=>{
+            if(el.id!==undefined){
+                getUsers(el.id);
+            }
+        })
+        setUserPosts(userPosts.filter((el)=>el.id!==undefined))
+    }
+
     getUsers();
 
-  },[])
-  console.log(userPosts);
+  },[bearerToken])
 
 
   let sortedUsers = userPosts.sort((a,b)=>{
@@ -57,8 +68,6 @@ const UserTable = () => {
 
     
   })
-  console.log(sortedUsers)  
-
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">User List</h1>
